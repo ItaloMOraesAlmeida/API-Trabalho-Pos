@@ -45,9 +45,9 @@ export class AppController {
     return dataProducts;
   }
 
-  @Get('bySku')
-  async getProductBySku(@Query('sku') sku: string): Promise<Product> {
-    const dataProduct = await this.appService.getProductsBySku(sku);
+  @Get('byId')
+  async getProductById(@Query('id') id: string): Promise<Product> {
+    const dataProduct = await this.appService.getProductsById(id);
 
     return dataProduct;
   }

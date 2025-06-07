@@ -52,9 +52,9 @@ export class AppService {
     }));
   }
 
-  async getProductsBySku(sku: string): Promise<Product> {
+  async getProductsById(id: string): Promise<Product> {
     const dataProsduct = await this.prismaService.product.findUnique({
-      where: { sku },
+      where: { id },
     });
 
     return {
