@@ -67,21 +67,23 @@ export class AppService {
   }
 
   async updateProduct(body: {
+    id: string;
     sku: string;
     name: string;
     price: number;
     description?: string;
   }): Promise<{ success: boolean; message?: string }> {
-    // Implement your update logic here, e.g., find product by SKU and update its fields
+    // Implement your update logic here, e.g., find product by ID and update its fields
     const productExists = await this.prismaService.product.findUnique({
-      where: { sku: body.sku },
+      where: { id: body.id },
     });
     if (!productExists) {
       return { success: false, message: 'Product not found' };
     }
     await this.prismaService.product.update({
-      where: { sku: body.sku },
+      where: { id: body.id },
       data: {
+        sku: body.sku,
         name: body.name,
         price: body.price,
         description: body.description,
@@ -91,9 +93,9 @@ export class AppService {
     return { success: true, message: 'Product updated successfully' };
   }
 
-  async deleteProduct(sku: string): Promise<boolean> {
+  async deleteProduct(id: string): Promise<boolean> {
     const productExists = await this.prismaService.product.findUnique({
-      where: { sku },
+      where: { id },
     });
 
     if (!productExists) {
@@ -101,7 +103,7 @@ export class AppService {
     }
 
     const resultUpdate = await this.prismaService.product.delete({
-      where: { sku },
+      where: { id },
     });
 
     return !!resultUpdate;

@@ -72,6 +72,7 @@ export class AppController {
   async updateProduct(
     @Body()
     body: {
+      id: string;
       sku: string;
       name: string;
       price: number;
@@ -84,8 +85,8 @@ export class AppController {
   }
 
   @Delete('delete')
-  async deleteProduct(@Query(`sku`) sku: string): Promise<boolean> {
-    const resultdata = await this.appService.deleteProduct(sku);
+  async deleteProduct(@Query(`id`) id: string): Promise<boolean> {
+    const resultdata = await this.appService.deleteProduct(id);
 
     return resultdata;
   }
