@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
 import { AppService, Product } from './app.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { Put } from '@nestjs/common';
 
 export interface IResultCreateProduct {
   success: boolean;
@@ -50,4 +51,36 @@ export class AppController {
 
     return dataProduct;
   }
+
+  @Put()
+  @ApiBody({
+    description: 'Update a product by SKU',
+    schema: {
+      type: 'object',
+      properties: {
+        sku: { type: 'string', example: 'SKU12345' },
+        name: { type: 'string', example: 'Updated Product Name' },
+        price: { type: 'number', example: 150.0 },
+        description: {
+          type: 'string',
+          example: 'Updated Product Description',
+        },
+      },
+      required: ['sku', 'name', 'price'],
+    },
+  })
+  async updateProduct(
+    @Body() body: { sku: string; name: string; price: number; description?: string },
+  ): Promise<IResultCreateProduct> {
+    const resultdata = await this.appService.updateProduct(body);
+
+    return resultdata;
+  }
+  @Delete('delete')
+  async deleteProduct(@Query(`sku`) sku: string ): Promise<boolean> {
+    const resultdata = await this.appService.deleteProduct(sku);
+
+    return resultdata;
+  }
+  
 }
