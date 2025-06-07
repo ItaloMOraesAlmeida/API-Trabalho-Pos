@@ -8,6 +8,7 @@ export interface Product {
   name: string;
   price: number;
   description?: string;
+  image?: string;
 }
 
 @Injectable()
@@ -32,6 +33,7 @@ export class AppService {
         name: product.name,
         price: product.price,
         description: product.description,
+        image: product.image,
       },
     });
 
@@ -49,6 +51,7 @@ export class AppService {
       name: product.name,
       price: Number(product.price),
       description: product.description ?? '',
+      image: product.image ?? '',
     }));
   }
 
@@ -63,6 +66,7 @@ export class AppService {
       name: dataProsduct?.name ?? '',
       price: Number(dataProsduct?.price),
       description: dataProsduct?.description ?? '',
+      image: dataProsduct?.image ?? '',
     };
   }
 
@@ -72,24 +76,39 @@ export class AppService {
     name: string;
     price: number;
     description?: string;
+    image?: string;
   }): Promise<{ success: boolean; message?: string }> {
-    // Implement your update logic here, e.g., find product by ID and update its fields
     const productExists = await this.prismaService.product.findUnique({
       where: { id: body.id },
     });
+
     if (!productExists) {
       return { success: false, message: 'Product not found' };
     }
+
+    const updateData: {
+      sku: string;
+      name: string;
+      price: number;
+      description?: string;
+      image?: string;
+    } = {
+      sku: body.sku,
+      name: body.name,
+      price: body.price,
+      description: body.description,
+    };
+
+    // Só atualiza a imagem se uma nova for fornecida
+    if (body.image) {
+      updateData.image = body.image;
+    }
+
     await this.prismaService.product.update({
       where: { id: body.id },
-      data: {
-        sku: body.sku,
-        name: body.name,
-        price: body.price,
-        description: body.description,
-      },
+      data: updateData,
     });
-    // This is a placeholder implementation
+
     return { success: true, message: 'Product updated successfully' };
   }
 
