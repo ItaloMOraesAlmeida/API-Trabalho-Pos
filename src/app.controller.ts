@@ -70,17 +70,23 @@ export class AppController {
     },
   })
   async updateProduct(
-    @Body() body: { sku: string; name: string; price: number; description?: string },
+    @Body()
+    body: {
+      sku: string;
+      name: string;
+      price: number;
+      description?: string;
+    },
   ): Promise<IResultCreateProduct> {
     const resultdata = await this.appService.updateProduct(body);
 
     return resultdata;
   }
+
   @Delete('delete')
-  async deleteProduct(@Query(`sku`) sku: string ): Promise<boolean> {
+  async deleteProduct(@Query(`sku`) sku: string): Promise<boolean> {
     const resultdata = await this.appService.deleteProduct(sku);
 
     return resultdata;
   }
-  
 }

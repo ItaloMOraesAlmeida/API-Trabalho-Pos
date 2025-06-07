@@ -5,6 +5,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    methods: ['GET', 'PUT'],
+  });
+
   const config = new DocumentBuilder()
     .setTitle('API Trabalho POS')
     .setDescription('API para CRUDS de produto')
