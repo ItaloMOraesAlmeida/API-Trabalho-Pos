@@ -12,6 +12,8 @@ describe('AppService Tests', () => {
       findUnique: jest.fn(),
       create: jest.fn(),
       findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
   };
 
@@ -40,6 +42,7 @@ describe('AppService Tests', () => {
       name: 'Produto Teste',
       price: 99.99,
       description: 'Descrição do produto teste',
+      image: 'product-image.jpg',
     };
 
     it('deve criar um produto com sucesso quando SKU não existe', async () => {
@@ -64,6 +67,7 @@ describe('AppService Tests', () => {
           name: mockProduct.name,
           price: mockProduct.price,
           description: mockProduct.description,
+          image: mockProduct.image,
         },
       });
       expect(result).toEqual({
@@ -79,6 +83,7 @@ describe('AppService Tests', () => {
         name: 'Produto Existente',
         price: 50.0,
         description: 'Produto já cadastrado',
+        image: 'existing-image.jpg',
       });
 
       // Act
@@ -111,9 +116,9 @@ describe('AppService Tests', () => {
       });
     });
 
-    it('deve criar produto sem SKU e descrição', async () => {
+    it('deve criar produto sem campos opcionais', async () => {
       // Arrange
-      const productWithoutSkuAndDescription: Product = {
+      const productMinimal: Product = {
         name: 'Produto Simples',
         price: 25.5,
       };
@@ -121,21 +126,21 @@ describe('AppService Tests', () => {
       mockPrismaService.product.findUnique.mockResolvedValue(null);
       mockPrismaService.product.create.mockResolvedValue({
         id: '789',
-        ...productWithoutSkuAndDescription,
+        ...productMinimal,
       });
 
       // Act
-      const result: IResultCreateProduct = await service.createProduct(
-        productWithoutSkuAndDescription,
-      );
+      const result: IResultCreateProduct =
+        await service.createProduct(productMinimal);
 
       // Assert
       expect(mockPrismaService.product.create).toHaveBeenCalledWith({
         data: {
           sku: undefined,
-          name: productWithoutSkuAndDescription.name,
-          price: productWithoutSkuAndDescription.price,
+          name: productMinimal.name,
+          price: productMinimal.price,
           description: undefined,
+          image: undefined,
         },
       });
       expect(result.success).toBe(true);
@@ -152,6 +157,7 @@ describe('AppService Tests', () => {
           name: 'Produto 1',
           price: 99.99,
           description: 'Descrição 1',
+          image: 'image1.jpg',
         },
         {
           id: '2',
@@ -159,6 +165,7 @@ describe('AppService Tests', () => {
           name: 'Produto 2',
           price: 149.99,
           description: 'Descrição 2',
+          image: 'image2.jpg',
         },
         {
           id: '3',
@@ -166,6 +173,7 @@ describe('AppService Tests', () => {
           name: 'Produto 3',
           price: 75.5,
           description: null,
+          image: null,
         },
       ];
 
@@ -183,6 +191,7 @@ describe('AppService Tests', () => {
           name: 'Produto 1',
           price: 99.99,
           description: 'Descrição 1',
+          image: 'image1.jpg',
         },
         {
           id: '2',
@@ -190,6 +199,7 @@ describe('AppService Tests', () => {
           name: 'Produto 2',
           price: 149.99,
           description: 'Descrição 2',
+          image: 'image2.jpg',
         },
         {
           id: '3',
@@ -197,6 +207,7 @@ describe('AppService Tests', () => {
           name: 'Produto 3',
           price: 75.5,
           description: '',
+          image: '',
         },
       ]);
     });
@@ -222,6 +233,7 @@ describe('AppService Tests', () => {
           name: 'Produto Decimal',
           price: '123.45', // Simulando Decimal do Prisma como string
           description: 'Teste decimal',
+          image: 'decimal-image.jpg',
         },
       ];
 
@@ -236,47 +248,49 @@ describe('AppService Tests', () => {
     });
   });
 
-  describe('getProductsBySku', () => {
-    it('deve retornar produto encontrado por SKU', async () => {
+  describe('getProductsById', () => {
+    it('deve retornar produto encontrado por ID', async () => {
       // Arrange
-      const sku = 'PROD001';
+      const id = '123';
       const mockDbProduct = {
-        id: '1',
+        id: '123',
         sku: 'PROD001',
         name: 'Produto Encontrado',
         price: 199.99,
-        description: 'Produto encontrado por SKU',
+        description: 'Produto encontrado por ID',
+        image: 'found-product.jpg',
       };
 
       mockPrismaService.product.findUnique.mockResolvedValue(mockDbProduct);
 
       // Act
-      const result: Product = await service.getProductsBySku(sku);
+      const result: Product = await service.getProductsById(id);
 
       // Assert
       expect(mockPrismaService.product.findUnique).toHaveBeenCalledWith({
-        where: { sku },
+        where: { id },
       });
       expect(result).toEqual({
-        id: '1',
+        id: '123',
         sku: 'PROD001',
         name: 'Produto Encontrado',
         price: 199.99,
-        description: 'Produto encontrado por SKU',
+        description: 'Produto encontrado por ID',
+        image: 'found-product.jpg',
       });
     });
 
     it('deve retornar produto com valores padrão quando não encontrado', async () => {
       // Arrange
-      const sku = 'PROD_INEXISTENTE';
+      const id = 'ID_INEXISTENTE';
       mockPrismaService.product.findUnique.mockResolvedValue(null);
 
       // Act
-      const result: Product = await service.getProductsBySku(sku);
+      const result: Product = await service.getProductsById(id);
 
       // Assert
       expect(mockPrismaService.product.findUnique).toHaveBeenCalledWith({
-        where: { sku },
+        where: { id },
       });
       expect(result).toEqual({
         id: undefined,
@@ -284,54 +298,206 @@ describe('AppService Tests', () => {
         name: '',
         price: NaN,
         description: '',
+        image: '',
       });
     });
 
     it('deve tratar valores nulos do banco corretamente', async () => {
       // Arrange
-      const sku = 'PROD002';
+      const id = '456';
       const mockDbProduct = {
-        id: '2',
+        id: '456',
         sku: null,
         name: 'Produto Sem SKU',
         price: '99.99',
         description: null,
+        image: null,
       };
 
       mockPrismaService.product.findUnique.mockResolvedValue(mockDbProduct);
 
       // Act
-      const result: Product = await service.getProductsBySku(sku);
+      const result: Product = await service.getProductsById(id);
 
       // Assert
       expect(result).toEqual({
-        id: '2',
+        id: '456',
         sku: '',
         name: 'Produto Sem SKU',
         price: 99.99,
         description: '',
+        image: '',
+      });
+    });
+  });
+
+  describe('updateProduct', () => {
+    const updateData = {
+      id: '123',
+      sku: 'PROD001_UPDATED',
+      name: 'Produto Atualizado',
+      price: 199.99,
+      description: 'Descrição atualizada',
+      image: 'updated-image.jpg',
+    };
+
+    it('deve atualizar produto com sucesso quando produto existe', async () => {
+      // Arrange
+      mockPrismaService.product.findUnique.mockResolvedValue({
+        id: '123',
+        sku: 'PROD001',
+        name: 'Produto Original',
+        price: 99.99,
+        description: 'Descrição original',
+        image: 'original-image.jpg',
+      });
+      mockPrismaService.product.update.mockResolvedValue(updateData);
+
+      // Act
+      const result = await service.updateProduct(updateData);
+
+      // Assert
+      expect(mockPrismaService.product.findUnique).toHaveBeenCalledWith({
+        where: { id: updateData.id },
+      });
+      expect(mockPrismaService.product.update).toHaveBeenCalledWith({
+        where: { id: updateData.id },
+        data: {
+          sku: updateData.sku,
+          name: updateData.name,
+          price: updateData.price,
+          description: updateData.description,
+          image: updateData.image,
+        },
+      });
+      expect(result).toEqual({
+        success: true,
+        message: 'Product updated successfully',
       });
     });
 
-    it('deve converter preço decimal para number', async () => {
+    it('deve retornar erro quando produto não existe', async () => {
       // Arrange
-      const sku = 'PROD003';
-      const mockDbProduct = {
-        id: '3',
-        sku: 'PROD003',
-        name: 'Produto Preço Decimal',
-        price: '456.78', // Simulando Decimal do Prisma
-        description: 'Teste conversão preço',
-      };
-
-      mockPrismaService.product.findUnique.mockResolvedValue(mockDbProduct);
+      mockPrismaService.product.findUnique.mockResolvedValue(null);
 
       // Act
-      const result: Product = await service.getProductsBySku(sku);
+      const result = await service.updateProduct(updateData);
 
       // Assert
-      expect(result.price).toBe(456.78);
-      expect(typeof result.price).toBe('number');
+      expect(mockPrismaService.product.findUnique).toHaveBeenCalledWith({
+        where: { id: updateData.id },
+      });
+      expect(mockPrismaService.product.update).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        success: false,
+        message: 'Product not found',
+      });
+    });
+
+    it('deve atualizar produto sem imagem quando não fornecida', async () => {
+      // Arrange
+      const updateDataWithoutImage = {
+        id: '123',
+        sku: 'PROD001_UPDATED',
+        name: 'Produto Atualizado',
+        price: 199.99,
+        description: 'Descrição atualizada',
+      };
+
+      mockPrismaService.product.findUnique.mockResolvedValue({
+        id: '123',
+        sku: 'PROD001',
+        name: 'Produto Original',
+        price: 99.99,
+        description: 'Descrição original',
+        image: 'original-image.jpg',
+      });
+      mockPrismaService.product.update.mockResolvedValue(
+        updateDataWithoutImage,
+      );
+
+      // Act
+      const result = await service.updateProduct(updateDataWithoutImage);
+
+      // Assert
+      expect(mockPrismaService.product.update).toHaveBeenCalledWith({
+        where: { id: updateDataWithoutImage.id },
+        data: {
+          sku: updateDataWithoutImage.sku,
+          name: updateDataWithoutImage.name,
+          price: updateDataWithoutImage.price,
+          description: updateDataWithoutImage.description,
+        },
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('deleteProduct', () => {
+    it('deve deletar produto com sucesso quando produto existe', async () => {
+      // Arrange
+      const id = '123';
+      const mockProduct = {
+        id: '123',
+        sku: 'PROD001',
+        name: 'Produto a ser deletado',
+        price: 99.99,
+        description: 'Produto que será removido',
+        image: 'to-delete.jpg',
+      };
+
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
+      mockPrismaService.product.delete.mockResolvedValue(mockProduct);
+
+      // Act
+      const result = await service.deleteProduct(id);
+
+      // Assert
+      expect(mockPrismaService.product.findUnique).toHaveBeenCalledWith({
+        where: { id },
+      });
+      expect(mockPrismaService.product.delete).toHaveBeenCalledWith({
+        where: { id },
+      });
+      expect(result).toBe(true);
+    });
+
+    it('deve retornar false quando produto não existe', async () => {
+      // Arrange
+      const id = 'ID_INEXISTENTE';
+      mockPrismaService.product.findUnique.mockResolvedValue(null);
+
+      // Act
+      const result = await service.deleteProduct(id);
+
+      // Assert
+      expect(mockPrismaService.product.findUnique).toHaveBeenCalledWith({
+        where: { id },
+      });
+      expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+    });
+
+    it('deve retornar false quando delete falha', async () => {
+      // Arrange
+      const id = '123';
+      const mockProduct = {
+        id: '123',
+        sku: 'PROD001',
+        name: 'Produto a ser deletado',
+        price: 99.99,
+        description: 'Produto que será removido',
+        image: 'to-delete.jpg',
+      };
+
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
+      mockPrismaService.product.delete.mockResolvedValue(null);
+
+      // Act
+      const result = await service.deleteProduct(id);
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 
